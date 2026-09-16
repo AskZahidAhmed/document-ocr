@@ -58,6 +58,6 @@ class PDFDocument:
 
         image_bytes = pixmap.tobytes("png")
 
-        return Image.open(
-            BytesIO(image_bytes)
-        )
+        with BytesIO(image_bytes) as buffer:
+            image = Image.open(buffer)
+            return image.copy()

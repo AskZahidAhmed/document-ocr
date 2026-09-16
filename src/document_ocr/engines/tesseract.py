@@ -4,7 +4,7 @@ import pytesseract
 from PIL import Image
 
 from document_ocr.engines.base import OCREngine
-from document_ocr.models.result import OCRResult
+from document_ocr.models.result import OCRResult, OCRWord
 from document_ocr.preprocessing.image import ImagePreprocessor
 
 
@@ -16,11 +16,10 @@ class TesseractEngine(OCREngine):
     ):
         self.preprocessor = preprocessor
 
-    def extract_text(
+    def _load_image(
         self,
         image: Path | Image.Image,
-        language: str = "eng",
-    ) -> OCRResult:
+    ) -> Image.Image:
 
         if isinstance(image, Path):
 
@@ -29,16 +28,26 @@ class TesseractEngine(OCREngine):
                     f"Image file not found: {image}"
                 )
 
-            if self.preprocessor:
-                image = self.preprocessor.process(image)
-            else:
-                image = Image.open(image)
+            with Image.open(image) as opened_image:
+                return opened_image.copy()
 
-        elif not isinstance(image, Image.Image):
+        if isinstance(image, Image.Image):
+            return image.copy()
 
-            raise TypeError(
-                "image must be a Path or PIL.Image.Image"
-            )
+        raise TypeError(
+            "image must be a Path or PIL.Image.Image"
+        )
+
+    def extract_text(
+        self,
+        image: Path | Image.Image,
+        language: str = "eng",
+    ) -> OCRResult:
+
+        image = self._load_image(image)
+
+        if self.preprocessor:
+            image = self.preprocessor.process(image)
 
         text = pytesseract.image_to_string(
             image,
@@ -51,13 +60,40 @@ class TesseractEngine(OCREngine):
             output_type=pytesseract.Output.DICT,
         )
 
-        confidences = [
-            float(value)
-            for value in data["conf"]
-            if str(value).strip() not in {"", "-1"}
-        ]
+        words: list[OCRWord] = []
+        confidences: list[float] = []
 
-        confidence = (
+        for index, raw_text in enumerate(data["text"]):
+
+            word = raw_text.strip()
+
+            if not word:
+                continue
+
+            raw_confidence = data["conf"][index]
+
+            try:
+                confidence = float(raw_confidence)
+            except (TypeError, ValueError):
+                continue
+
+            if confidence < 0:
+                continue
+
+            words.append(
+                OCRWord(
+                    text=word,
+                    confidence=confidence,
+                    x=int(data["left"][index]),
+                    y=int(data["top"][index]),
+                    width=int(data["width"][index]),
+                    height=int(data["height"][index]),
+                )
+            )
+
+            confidences.append(confidence)
+
+        overall_confidence = (
             sum(confidences) / len(confidences)
             if confidences
             else None
@@ -66,7 +102,8 @@ class TesseractEngine(OCREngine):
         return OCRResult(
             text=text.strip(),
             language=language,
-            confidence=confidence,
+            confidence=overall_confidence,
+            words=words,
             metadata={
                 "engine": "tesseract",
             },
