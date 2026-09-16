@@ -3,7 +3,7 @@ from document_ocr.engines.tesseract import TesseractEngine
 
 
 def main() -> None:
-    image_path = Path("examples/sample.png")
+    image_path = Path("examples/pm-letter-to-ajay-dake.png")
     engine = TesseractEngine()
     result = engine.extract_text(image_path=image_path, language="eng+hin")
     print("Language:", result.language)
