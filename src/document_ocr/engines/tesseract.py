@@ -1,13 +1,19 @@
 from pathlib import Path
 
 import pytesseract
-from PIL import Image
 
 from document_ocr.engines.base import OCREngine
 from document_ocr.models.result import OCRResult
+from document_ocr.preprocessing.image import ImagePreprocessor
 
 
 class TesseractEngine(OCREngine):
+
+    def __init__(
+        self,
+        preprocessor: ImagePreprocessor | None = None,
+    ):
+        self.preprocessor = preprocessor
 
     def extract_text(
         self,
@@ -15,17 +21,23 @@ class TesseractEngine(OCREngine):
         language: str = "eng",
     ) -> OCRResult:
 
-        with Image.open(image_path) as image:
-            text = pytesseract.image_to_string(
-                image,
-                lang=language,
-            )
+        if self.preprocessor:
+            image = self.preprocessor.process(image_path)
+        else:
+            from PIL import Image
 
-            data = pytesseract.image_to_data(
-                image,
-                lang=language,
-                output_type=pytesseract.Output.DICT,
-            )
+            image = Image.open(image_path)
+
+        text = pytesseract.image_to_string(
+            image,
+            lang=language,
+        )
+
+        data = pytesseract.image_to_data(
+            image,
+            lang=language,
+            output_type=pytesseract.Output.DICT,
+        )
 
         confidences = [
             float(value)
