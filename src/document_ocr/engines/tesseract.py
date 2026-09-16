@@ -9,7 +9,6 @@ from document_ocr.preprocessing.image import ImagePreprocessor
 
 
 class TesseractEngine(OCREngine):
-
     def __init__(
         self,
         preprocessor: ImagePreprocessor | None = None,
@@ -22,11 +21,8 @@ class TesseractEngine(OCREngine):
     ) -> Image.Image:
 
         if isinstance(image, Path):
-
             if not image.exists():
-                raise FileNotFoundError(
-                    f"Image file not found: {image}"
-                )
+                raise FileNotFoundError(f"Image file not found: {image}")
 
             with Image.open(image) as opened_image:
                 return opened_image.copy()
@@ -34,9 +30,7 @@ class TesseractEngine(OCREngine):
         if isinstance(image, Image.Image):
             return image.copy()
 
-        raise TypeError(
-            "image must be a Path or PIL.Image.Image"
-        )
+        raise TypeError("image must be a Path or PIL.Image.Image")
 
     def extract_text(
         self,
@@ -64,7 +58,6 @@ class TesseractEngine(OCREngine):
         confidences: list[float] = []
 
         for index, raw_text in enumerate(data["text"]):
-
             word = raw_text.strip()
 
             if not word:
@@ -94,9 +87,7 @@ class TesseractEngine(OCREngine):
             confidences.append(confidence)
 
         overall_confidence = (
-            sum(confidences) / len(confidences)
-            if confidences
-            else None
+            sum(confidences) / len(confidences) if confidences else None
         )
 
         return OCRResult(

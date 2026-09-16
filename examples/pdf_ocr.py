@@ -30,16 +30,11 @@ def main() -> None:
     )
 
     for result in results:
-
         print("=" * 60)
 
-        print(
-            f"Page: {result.metadata['page']}"
-        )
+        print(f"Page: {result.metadata['page']}")
 
-        print(
-            f"Confidence: {result.confidence}"
-        )
+        print(f"Confidence: {result.confidence}")
 
         print()
 

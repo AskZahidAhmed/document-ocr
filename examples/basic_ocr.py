@@ -1,11 +1,17 @@
 from pathlib import Path
 
 from document_ocr.engines.tesseract import TesseractEngine
+from document_ocr.exporters.json import JSONExporter
+from document_ocr.exporters.text import TextExporter
 from document_ocr.preprocessing.image import ImagePreprocessor
 
 
 def main() -> None:
+
     image_path = Path("examples/sample.png")
+
+    json_output = Path("output/result.json")
+    text_output = Path("output/result.txt")
 
     preprocessor = ImagePreprocessor(
         grayscale=True,
@@ -19,31 +25,26 @@ def main() -> None:
 
     result = engine.extract_text(
         image_path,
-        language="eng",
+        language="eng+hin",
     )
 
-    print("Engine:", result.metadata["engine"])
-    print("Language:", result.language)
+    JSONExporter().export(
+        result,
+        json_output,
+    )
+
+    TextExporter().export(
+        result,
+        text_output,
+    )
+
+    print("OCR completed")
+    print()
+    print("Text:", text_output)
+    print("JSON:", json_output)
+    print()
     print("Confidence:", result.confidence)
-    print()
-
-    print("TEXT")
-    print("-" * 60)
-    print(result.text)
-    print()
-
-    print("WORDS")
-    print("-" * 60)
-
-    for word in result.words:
-        print(
-            f"text={word.text!r}, "
-            f"confidence={word.confidence:.2f}, "
-            f"x={word.x}, "
-            f"y={word.y}, "
-            f"width={word.width}, "
-            f"height={word.height}"
-        )
+    print("Words:", len(result.words))
 
 
 if __name__ == "__main__":

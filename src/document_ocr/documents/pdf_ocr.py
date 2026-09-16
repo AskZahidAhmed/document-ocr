@@ -6,7 +6,6 @@ from document_ocr.models.result import OCRResult
 
 
 class PDFOCR:
-
     def __init__(
         self,
         engine: OCREngine,
@@ -32,10 +31,7 @@ class PDFOCR:
             1,
             pdf.page_count() + 1,
         ):
-
-            image = pdf.render_page_as_image(
-                page_number
-            )
+            image = pdf.render_page_as_image(page_number)
 
             result = self.engine.extract_text(
                 image=image,
