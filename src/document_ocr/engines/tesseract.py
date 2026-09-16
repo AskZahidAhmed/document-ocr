@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytesseract
+from PIL import Image
 
 from document_ocr.engines.base import OCREngine
 from document_ocr.models.result import OCRResult
@@ -17,16 +18,27 @@ class TesseractEngine(OCREngine):
 
     def extract_text(
         self,
-        image_path: Path,
+        image: Path | Image.Image,
         language: str = "eng",
     ) -> OCRResult:
 
-        if self.preprocessor:
-            image = self.preprocessor.process(image_path)
-        else:
-            from PIL import Image
+        if isinstance(image, Path):
 
-            image = Image.open(image_path)
+            if not image.exists():
+                raise FileNotFoundError(
+                    f"Image file not found: {image}"
+                )
+
+            if self.preprocessor:
+                image = self.preprocessor.process(image)
+            else:
+                image = Image.open(image)
+
+        elif not isinstance(image, Image.Image):
+
+            raise TypeError(
+                "image must be a Path or PIL.Image.Image"
+            )
 
         text = pytesseract.image_to_string(
             image,
@@ -57,6 +69,5 @@ class TesseractEngine(OCREngine):
             confidence=confidence,
             metadata={
                 "engine": "tesseract",
-                "source": str(image_path),
             },
         )

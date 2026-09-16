@@ -1,10 +1,11 @@
 from pathlib import Path
+
 from document_ocr.engines.tesseract import TesseractEngine
 from document_ocr.preprocessing.image import ImagePreprocessor
 
 
 def main() -> None:
-    image_path = Path("examples/sample_hindi.png")
+    image_path = Path("examples/sample.png")
 
     preprocessor = ImagePreprocessor(
         grayscale=True,
