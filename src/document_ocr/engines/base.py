@@ -15,3 +15,13 @@ class OCREngine(ABC):
     ) -> OCRResult:
         """Extract text from an image."""
         raise NotImplementedError
+
+    @abstractmethod
+    def name(self) -> str:
+        """Return the OCR engine name."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def supported_languages(self) -> list[str]:
+        """Return supported language codes."""
+        raise NotImplementedError

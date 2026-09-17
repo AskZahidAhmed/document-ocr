@@ -21,9 +21,7 @@ class DocumentValidator:
         ".webp",
     }
 
-    PDF_EXTENSIONS = {
-        ".pdf"
-    }
+    PDF_EXTENSIONS = {".pdf"}
 
     def __init__(
         self,

@@ -6,17 +6,34 @@ from PIL import Image
 from document_ocr.engines.base import OCREngine
 from document_ocr.models.result import OCRResult, OCRWord
 from document_ocr.preprocessing.image import ImagePreprocessor
-from document_ocr.validators.document import DocumentValidator
 
 
 class TesseractEngine(OCREngine):
     def __init__(
         self,
         preprocessor: ImagePreprocessor | None = None,
-        validator: DocumentValidator | None = None,
     ):
         self.preprocessor = preprocessor
-        self.validator = validator
+
+    def name(self) -> str:
+        return "tesseract"
+
+    def supported_languages(self) -> list[str]:
+        return pytesseract.get_languages(config="")
+
+    def _validate_language(
+        self,
+        language: str,
+    ) -> None:
+
+        supported = self.supported_languages()
+
+        requested_languages = language.split("+")
+
+        unsupported = [lang for lang in requested_languages if lang not in supported]
+
+        if unsupported:
+            raise ValueError("Unsupported OCR language(s): " + ", ".join(unsupported))
 
     def _load_image(
         self,
@@ -41,11 +58,9 @@ class TesseractEngine(OCREngine):
         language: str = "eng",
     ) -> OCRResult:
 
-        if isinstance(image, Path):
-            if self.validator:
-                self.validator.validate(image)
+        self._validate_language(language)
 
-            image = self._load_image(image)
+        image = self._load_image(image)
 
         if self.preprocessor:
             image = self.preprocessor.process(image)
@@ -70,10 +85,8 @@ class TesseractEngine(OCREngine):
             if not word:
                 continue
 
-            raw_confidence = data["conf"][index]
-
             try:
-                confidence = float(raw_confidence)
+                confidence = float(data["conf"][index])
             except (TypeError, ValueError):
                 continue
 
@@ -103,6 +116,6 @@ class TesseractEngine(OCREngine):
             confidence=overall_confidence,
             words=words,
             metadata={
-                "engine": "tesseract",
+                "engine": self.name(),
             },
         )
