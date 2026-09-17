@@ -6,14 +6,17 @@ from PIL import Image
 from document_ocr.engines.base import OCREngine
 from document_ocr.models.result import OCRResult, OCRWord
 from document_ocr.preprocessing.image import ImagePreprocessor
+from document_ocr.validators.document import DocumentValidator
 
 
 class TesseractEngine(OCREngine):
     def __init__(
         self,
         preprocessor: ImagePreprocessor | None = None,
+        validator: DocumentValidator | None = None,
     ):
         self.preprocessor = preprocessor
+        self.validator = validator
 
     def _load_image(
         self,
@@ -38,7 +41,11 @@ class TesseractEngine(OCREngine):
         language: str = "eng",
     ) -> OCRResult:
 
-        image = self._load_image(image)
+        if isinstance(image, Path):
+            if self.validator:
+                self.validator.validate(image)
+
+            image = self._load_image(image)
 
         if self.preprocessor:
             image = self.preprocessor.process(image)

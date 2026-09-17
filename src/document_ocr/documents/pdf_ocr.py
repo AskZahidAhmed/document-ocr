@@ -3,6 +3,7 @@ from pathlib import Path
 from document_ocr.documents.pdf import PDFDocument
 from document_ocr.engines.base import OCREngine
 from document_ocr.models.result import OCRResult
+from document_ocr.validators.document import DocumentValidator
 
 
 class PDFOCR:
@@ -10,15 +11,20 @@ class PDFOCR:
         self,
         engine: OCREngine,
         dpi: int = 200,
+        validator: DocumentValidator | None = None,
     ):
         self.engine = engine
         self.dpi = dpi
+        self.validator = validator
 
     def process(
         self,
         pdf_path: Path,
         language: str = "eng",
     ) -> list[OCRResult]:
+
+        if self.validator:
+            self.validator.validate(pdf_path)
 
         pdf = PDFDocument(
             path=pdf_path,
