@@ -3,13 +3,14 @@ from dataclasses import asdict
 from pathlib import Path
 
 from document_ocr.exporters.base import OCRExporter
+from document_ocr.models.ocr_document import OCRDocument
 from document_ocr.models.result import OCRResult
 
 
 class JSONExporter(OCRExporter):
     def export(
         self,
-        result: OCRResult,
+        result: OCRResult | OCRDocument,
         output_path: Path,
     ) -> None:
 

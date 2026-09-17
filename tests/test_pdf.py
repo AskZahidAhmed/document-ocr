@@ -90,15 +90,27 @@ def test_pdf_ocr_max_pages(tmp_path):
         max_pages=2,
     )
 
-    results = processor.process(
+    document = processor.process(
         file_path,
         language="eng",
     )
 
-    assert len(results) == 2
-    assert results[0].metadata["page"] == 1
-    assert results[1].metadata["page"] == 2
-    assert results[0].metadata["total_pages"] == 5
+    assert document.page_count == 2
+    assert document.pages[0].page_number == 1
+    assert document.pages[1].page_number == 2
+
+    assert document.pages[0].metadata["engine"] == "fake"
+
+    document = processor.process(
+        file_path,
+        language="eng",
+    )
+
+    assert document.page_count == 2
+    assert document.pages[0].page_number == 1
+    assert document.pages[1].page_number == 2
+
+    assert document.pages[0].metadata["engine"] == "fake"
 
 
 def test_pdf_ocr_progress(tmp_path):

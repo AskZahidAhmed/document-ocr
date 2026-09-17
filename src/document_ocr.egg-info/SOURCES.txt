@@ -25,11 +25,14 @@ src/document_ocr/exporters/json.py
 src/document_ocr/exporters/text.py
 src/document_ocr/models/__init__.py
 src/document_ocr/models/document.py
+src/document_ocr/models/ocr_document.py
+src/document_ocr/models/page.py
 src/document_ocr/models/result.py
 src/document_ocr/preprocessing/__init__.py
 src/document_ocr/preprocessing/image.py
 src/document_ocr/validators/__init__.py
 src/document_ocr/validators/document.py
+tests/test_cli.py
 tests/test_engines.py
 tests/test_exporters.py
 tests/test_languages.py

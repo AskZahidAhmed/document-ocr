@@ -4,7 +4,8 @@ from pathlib import Path
 from document_ocr.documents.pdf import PDFDocument
 from document_ocr.engines.base import OCREngine
 from document_ocr.exceptions import InvalidDocumentError
-from document_ocr.models.result import OCRResult
+from document_ocr.models.ocr_document import OCRDocument
+from document_ocr.models.page import OCRPage
 from document_ocr.validators.document import DocumentValidator
 
 
@@ -37,7 +38,7 @@ class PDFOCR:
         pdf_path: Path,
         language: str = "eng",
         progress_callback: ProgressCallback | None = None,
-    ) -> list[OCRResult]:
+    ) -> OCRDocument:
 
         if self.validator:
             self.validator.validate(pdf_path)
@@ -57,22 +58,32 @@ class PDFOCR:
                 self.max_pages,
             )
 
-        results: list[OCRResult] = []
+        pages: list[OCRPage] = []
 
-        for page_number in range(1, pages_to_process + 1):
+        for page_number in range(
+            1,
+            pages_to_process + 1,
+        ):
             try:
                 image = pdf.render_page_as_image(page_number)
-                result = self.engine.extract_text(image=image, language=language)
-                result.metadata.update(
-                    {
-                        "document": str(pdf_path),
-                        "page": page_number,
-                        "total_pages": total_pages,
-                        "dpi": self.dpi,
-                    }
+
+                result = self.engine.extract_text(
+                    image=image,
+                    language=language,
                 )
 
-                results.append(result)
+                page = OCRPage(
+                    page_number=page_number,
+                    text=result.text,
+                    confidence=result.confidence,
+                    words=result.words,
+                    metadata={
+                        "dpi": self.dpi,
+                        "engine": result.metadata.get("engine"),
+                    },
+                )
+
+                pages.append(page)
 
             except Exception as exc:
                 if self.stop_on_error:
@@ -86,4 +97,15 @@ class PDFOCR:
                     pages_to_process,
                 )
 
-        return results
+        return OCRDocument(
+            source=str(pdf_path),
+            language=language,
+            pages=pages,
+            metadata={
+                "document_type": "pdf",
+                "total_pages": total_pages,
+                "processed_pages": len(pages),
+                "dpi": self.dpi,
+                "engine": self.engine.name(),
+            },
+        )

@@ -160,7 +160,7 @@ def process_pdf(
         max_pages=max_pages,
     )
 
-    results = processor.process(
+    document = processor.process(
         input_path,
         language=language,
         progress_callback=show_progress,
@@ -175,51 +175,22 @@ def process_pdf(
 
     if output_format in {"json", "both"}:
         JSONExporter().export(
-            _merge_results(results),
+            document,
             output_dir / f"{stem}.json",
         )
 
     if output_format in {"txt", "both"}:
         TextExporter().export(
-            _merge_results(results),
+            document,
             output_dir / f"{stem}.txt",
         )
 
     print()
     print(f"OCR completed: {input_path}")
 
-    print(f"Pages processed: {len(results)}")
+    print(f"Pages processed: {document.page_count}")
 
-
-def _merge_results(results):
-    from document_ocr.models.result import OCRResult
-
-    text_parts = []
-    words = []
-    confidences = []
-
-    metadata = {
-        "engine": "tesseract",
-        "pages": len(results),
-    }
-
-    for result in results:
-        text_parts.append(result.text)
-
-        words.extend(result.words)
-
-        if result.confidence is not None:
-            confidences.append(result.confidence)
-
-    confidence = sum(confidences) / len(confidences) if confidences else None
-
-    return OCRResult(
-        text="\n\n".join(text_parts),
-        language=(results[0].language if results else "eng"),
-        confidence=confidence,
-        words=words,
-        metadata=metadata,
-    )
+    print(f"Confidence: {document.confidence}")
 
 
 def main() -> None:
