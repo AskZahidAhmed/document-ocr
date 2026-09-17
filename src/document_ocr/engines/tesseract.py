@@ -6,6 +6,7 @@ from PIL import Image
 from document_ocr.engines.base import OCREngine
 from document_ocr.models.result import OCRResult, OCRWord
 from document_ocr.preprocessing.image import ImagePreprocessor
+from document_ocr.engines.languages import get_language
 
 
 class TesseractEngine(OCREngine):
@@ -25,15 +26,13 @@ class TesseractEngine(OCREngine):
         self,
         language: str,
     ) -> None:
-
+        requested_languages = language.split("+")
         supported = self.supported_languages()
 
-        requested_languages = language.split("+")
-
-        unsupported = [lang for lang in requested_languages if lang not in supported]
-
-        if unsupported:
-            raise ValueError("Unsupported OCR language(s): " + ", ".join(unsupported))
+        for lang in requested_languages:
+            get_language(lang)
+            if lang not in supported:
+                raise ValueError(f"Tesseract language pack is not installed: {lang}")
 
     def _load_image(
         self,
@@ -55,7 +54,7 @@ class TesseractEngine(OCREngine):
     def extract_text(
         self,
         image: Path | Image.Image,
-        language: str = "eng",
+        language: str = "eng+hin",
     ) -> OCRResult:
 
         self._validate_language(language)

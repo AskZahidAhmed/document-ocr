@@ -19,7 +19,7 @@ def main() -> None:
 
     result = engine.extract_text(
         image_path,
-        language="hin",
+        language="hin+eng",
     )
 
     print("Engine:", result.metadata["engine"])

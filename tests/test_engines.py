@@ -29,3 +29,18 @@ def test_unsupported_language():
             image=None,
             language="xyz",
         )
+
+
+def test_hindi_english_language_validation():
+
+    engine = TesseractEngine()
+
+    languages = engine.supported_languages()
+
+    if not {
+        "hin",
+        "eng",
+    }.issubset(languages):
+        pytest.skip("Hindi and English language packs are not installed")
+
+    engine._validate_language("hin+eng")
